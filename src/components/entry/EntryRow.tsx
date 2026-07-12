@@ -1,14 +1,12 @@
 // ─── EntryRow ────────────────────────────────────────────────────────────────
 // A single editable row for an asset or liability entry.
-// Fields: name, category, currency, value, ticker (optional), delete.
-// Supports market price lookup via ticker.
+// Fields: name, category, currency, value.
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Currency, AssetCategory, LiabilityCategory } from "@/lib/types";
 import { SUPPORTED_CURRENCIES } from "@/lib/types";
-import { fetchMarketPrice, formatPriceTimestamp } from "@/lib/marketPrice";
 
 interface EntryRowProps {
   id: string;
@@ -19,9 +17,7 @@ interface EntryRowProps {
   valueInBaseCurrency: number;
   type: "asset" | "liability";
   index: number;
-  ticker?: string;
   isRemoving?: boolean;
-  isDraft: boolean;
   onUpdate: (id: string, field: string, value: string | number) => void;
   onDelete: (id: string) => void;
 }
@@ -42,59 +38,19 @@ export default function EntryRow({
   value,
   type,
   index,
-  ticker,
   isRemoving,
-  isDraft,
   onUpdate,
   onDelete,
 }: EntryRowProps) {
   const [mounted, setMounted] = useState(false);
-  const [priceLoading, setPriceLoading] = useState(false);
-  const [priceMessage, setPriceMessage] = useState<{ text: string; isError: boolean } | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 30);
     return () => clearTimeout(timer);
   }, []);
 
-  // Clear price message after 5 seconds
-  useEffect(() => {
-    if (!priceMessage) return;
-    const timer = setTimeout(() => setPriceMessage(null), 5000);
-    return () => clearTimeout(timer);
-  }, [priceMessage]);
-
   const categories = type === "asset" ? ASSET_CATEGORIES : LIABILITY_CATEGORIES;
   const delayClass = `delay-${Math.min(index, 5)}`;
-
-  async function handleFetchPrice() {
-    if (!ticker?.trim()) return;
-    setPriceLoading(true);
-    setPriceMessage(null);
-
-    const result = await fetchMarketPrice(ticker);
-
-    if (result.success && result.price !== undefined) {
-      onUpdate(id, "value", result.price);
-      if (result.currency) {
-        onUpdate(id, "currency", result.currency);
-      }
-      setPriceMessage({
-        text: `Fetched $${result.price.toFixed(2)} ${result.currency} • ${formatPriceTimestamp(result.timestamp ?? new Date().toISOString())}`,
-        isError: false,
-      });
-    } else {
-      setPriceMessage({
-        text: result.error ?? "Failed to fetch price",
-        isError: true,
-      });
-    }
-
-    setPriceLoading(false);
-  }
-
-  // Create empty asset for ticker field render
-  const showTicker = type === "asset";
 
   return (
     <div
@@ -152,44 +108,6 @@ export default function EntryRow({
           className="flex-1 sm:w-28 rounded border border-slate/20 bg-transparent px-2 py-1.5 text-right font-mono text-sm text-ink placeholder:text-slate/40 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass"
         />
       </div>
-
-      {/* Ticker + Fetch Price — standalone row, clearly visible */}
-      {isDraft && showTicker && (
-        <div className="flex items-center gap-2 w-full sm:w-auto border-t border-slate/10 pt-2 mt-1 sm:border-0 sm:pt-0 sm:mt-0">
-          <span className="text-[10px] font-medium text-brass uppercase tracking-wider whitespace-nowrap">
-            Price lookup
-          </span>
-          <input
-            type="text"
-            value={ticker ?? ""}
-            onChange={(e) => onUpdate(id, "ticker", e.target.value.toUpperCase())}
-            placeholder="AAPL"
-            className="w-16 rounded border border-slate/30 bg-paper px-2 py-1 text-xs font-mono text-ink placeholder:text-slate/40 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass uppercase"
-          />
-          <button
-            onClick={handleFetchPrice}
-            disabled={priceLoading || !ticker?.trim()}
-            className="flex items-center gap-1 rounded bg-brass px-2 py-1 text-[10px] font-medium text-white transition-colors hover:bg-brass/90 disabled:opacity-40"
-          >
-            {priceLoading ? (
-              <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            ) : (
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
-              </svg>
-            )}
-            Get Price
-          </button>
-          {priceMessage && (
-            <span className={`text-[10px] ${priceMessage.isError ? "text-clay" : "text-signal-sage"}`}>
-              {priceMessage.text}
-            </span>
-          )}
-        </div>
-      )}
 
       {/* Delete button */}
       <button

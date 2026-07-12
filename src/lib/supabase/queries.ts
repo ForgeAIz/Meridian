@@ -45,7 +45,6 @@ function mapAssetEntry(row: Record<string, any>): AssetEntry {
     currency: row.currency as Currency,
     value: Number(row.value),
     valueInBaseCurrency: Number(row.value_in_base_currency),
-    ticker: row.ticker ?? undefined,
   };
 }
 
@@ -58,7 +57,6 @@ function mapLiabilityEntry(row: Record<string, any>): LiabilityEntry {
     value: Number(row.value),
     valueInBaseCurrency: Number(row.value_in_base_currency),
     linkedAssetId: row.linked_asset_id ?? undefined,
-    ticker: row.ticker ?? undefined,
   };
 }
 
@@ -309,7 +307,6 @@ export async function upsertSnapshot(snapshot: Snapshot) {
         currency: e.currency,
         value: e.value,
         value_in_base_currency: e.valueInBaseCurrency,
-        ticker: e.ticker ?? null,
       }))
     );
     if (assetError) throw assetError;
@@ -325,7 +322,6 @@ export async function upsertSnapshot(snapshot: Snapshot) {
         value: e.value,
         value_in_base_currency: e.valueInBaseCurrency,
         linked_asset_id: e.linkedAssetId ?? null,
-        ticker: e.ticker ?? null,
       }))
     );
     if (liabilityError) throw liabilityError;
