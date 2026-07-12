@@ -1,8 +1,6 @@
 @import "tailwindcss";
 
-/* ─── Meridian Design Tokens ─────────────────────────────────────────────────
-   Cartography-instrument palette from the design system.
-   Brass is the signature accent — used sparingly. */
+/* ─── Meridian Design Tokens ────────────────────────────────────────────────*/
 
 @theme inline {
   --color-ink: #14181c;
@@ -19,7 +17,7 @@
   --font-mono: "IBM Plex Mono", monospace;
 }
 
-/* ─── Base styles ───────────────────────────────────────────────────────────*/
+/* ─── Base ──────────────────────────────────────────────────────────────────*/
 
 body {
   background: var(--color-paper);
@@ -27,25 +25,74 @@ body {
   font-family: var(--font-sans);
 }
 
-/* ─── Dark mode ──────────────────────────────────────────────────────────────*/
+/* ─── Dark mode ─────────────────────────────────────────────────────────────*/
 
 .dark body,
 body.dark {
-  background: var(--color-ink);
-  color: var(--color-paper);
+  background: #0f1215;
+  color: #e8e4db;
 }
 
-.dark .text-ink { color: var(--color-paper); }
-.dark .bg-paper { background-color: var(--color-ink); }
+.dark .text-ink { color: #e8e4db; }
+.dark .bg-paper { background-color: #0f1215; }
+.dark .bg-white { background-color: #1a1e23; }
+.dark .text-slate { color: #8a95a0; }
+.dark .border-slate\/20 { border-color: rgba(138, 149, 160, 0.12); }
+.dark .border-slate\/30 { border-color: rgba(138, 149, 160, 0.18); }
+.dark .border-slate\/15 { border-color: rgba(138, 149, 160, 0.1); }
+.dark .border-slate\/10 { border-color: rgba(138, 149, 160, 0.07); }
+.dark .bg-slate\/5 { background-color: rgba(138, 149, 160, 0.08); }
+.dark .bg-slate\/10 { background-color: rgba(138, 149, 160, 0.12); }
+.dark .bg-paper\/95 { background-color: rgba(15, 18, 21, 0.95); }
+.dark .bg-white\/50 { background-color: rgba(26, 30, 35, 0.5); }
+.dark .bg-white\/30 { background-color: rgba(26, 30, 35, 0.3); }
 
-/* ─── Utility: Thin hairline dividers ────────────────────────────────────────*/
+/* Nav & structural borders */
+.dark .border-b { border-color: rgba(138, 149, 160, 0.12); }
+.dark .border-t { border-color: rgba(138, 149, 160, 0.12); }
+
+/* Landing page footer */
+.dark .bg-\[\#EDE8DF\] { background-color: #181b1f; }
+
+/* Charts */
+.dark .recharts-cartesian-grid-horizontal line,
+.dark .recharts-cartesian-grid-vertical line {
+  stroke: rgba(138, 149, 160, 0.12) !important;
+}
+.dark .recharts-text {
+  fill: #8a95a0 !important;
+}
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #1a1e23 !important;
+  border-color: rgba(138, 149, 160, 0.15) !important;
+}
+
+/* Border color overrides for specific classes used inline */
+.dark [class*="border-slate/"] {
+  border-color: rgba(138, 149, 160, 0.12);
+}
+
+/* Inputs & selects */
+.dark input,
+.dark select {
+  background-color: #1a1e23;
+  color: #e8e4db;
+  border-color: rgba(138, 149, 160, 0.18);
+}
+
+/* Transitions */
+.dark .transition-colors {
+  transition-property: color, background-color, border-color;
+  transition-duration: 200ms;
+}
+
+/* ─── Utility: Hairline dividers ────────────────────────────────────────────*/
 
 .hairline { border-bottom: 1px solid rgba(91, 101, 112, 0.2); }
 .hairline-vertical { border-right: 1px solid rgba(91, 101, 112, 0.2); }
 
-/* ─── Animations ─────────────────────────────────────────────────────────────*/
+/* ─── Animations ────────────────────────────────────────────────────────────*/
 
-/* The Line signature draw-in */
 @keyframes line-draw {
   from { stroke-dashoffset: 1000; }
   to { stroke-dashoffset: 0; }
@@ -56,23 +103,15 @@ body.dark {
   animation: line-draw 600ms ease-out forwards;
 }
 
-/* Fade in + slide up for entry rows and cards */
 @keyframes fade-slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-slide-up {
   animation: fade-slide-up 300ms ease-out both;
 }
 
-/* Staggered delay helpers */
 .delay-0 { animation-delay: 0ms; }
 .delay-1 { animation-delay: 60ms; }
 .delay-2 { animation-delay: 120ms; }
@@ -80,18 +119,9 @@ body.dark {
 .delay-4 { animation-delay: 240ms; }
 .delay-5 { animation-delay: 300ms; }
 
-/* Collapse animation for removed rows */
 @keyframes collapse-out {
-  from {
-    opacity: 1;
-    max-height: 80px;
-    transform: scaleY(1);
-  }
-  to {
-    opacity: 0;
-    max-height: 0;
-    transform: scaleY(0);
-  }
+  from { opacity: 1; max-height: 80px; transform: scaleY(1); }
+  to { opacity: 0; max-height: 0; transform: scaleY(0); }
 }
 
 .animate-collapse-out {
@@ -99,7 +129,6 @@ body.dark {
   overflow: hidden;
 }
 
-/* Count-up number reveal */
 @keyframes count-reveal {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
@@ -109,20 +138,10 @@ body.dark {
   animation: count-reveal 200ms ease-out both;
 }
 
-/* Sparkle/pulse for the net worth dot on charts */
-@keyframes pulse-dot {
-  0%, 100% { r: 3; opacity: 1; }
-  50% { r: 5; opacity: 0.6; }
-}
-
-/* ─── Reduced motion ─────────────────────────────────────────────────────────*/
+/* ─── Reduced motion ────────────────────────────────────────────────────────*/
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-line-draw {
-    animation: none;
-    stroke-dashoffset: 0;
-  }
-
+  .animate-line-draw,
   .animate-fade-slide-up,
   .animate-collapse-out,
   .animate-count-reveal {
@@ -131,22 +150,19 @@ body.dark {
     transform: none;
     max-height: none;
   }
-
-  *,
-  *::before,
-  *::after {
+  .dark .transition-colors {
+    transition-duration: 0.01ms;
+  }
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
-/* ─── Touch target helper ────────────────────────────────────────────────────*/
+/* ─── Touch target helper ───────────────────────────────────────────────────*/
 
-.touch-target {
-  position: relative;
-}
-
+.touch-target { position: relative; }
 .touch-target::after {
   content: "";
   position: absolute;
@@ -156,12 +172,8 @@ body.dark {
   left: -10px;
 }
 
-/* ─── Chart hover brightening ────────────────────────────────────────────────*/
+/* ─── Chart card hover ──────────────────────────────────────────────────────*/
 
-.chart-card {
-  transition: box-shadow 200ms ease;
-}
-
-.chart-card:hover {
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
-}
+.chart-card { transition: box-shadow 200ms ease; }
+.chart-card:hover { box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04); }
+.dark .chart-card:hover { box-shadow: 0 1px 8px rgba(0, 0, 0, 0.2); }

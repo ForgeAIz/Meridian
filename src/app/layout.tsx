@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter, Fraunces, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import AuthGate from "@/components/shared/AuthGate";
+import ThemeProvider from "@/components/shared/ThemeProvider";
+import QueryProvider from "@/components/shared/QueryProvider";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -41,8 +43,12 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${fraunces.variable} ${ibmPlexMono.variable}`}
     >
-      <body className="min-h-screen font-sans antialiased">
-        <AuthGate>{children}</AuthGate>
+      <body className="min-h-screen font-sans antialiased transition-colors duration-200">
+        <QueryProvider>
+          <AuthGate>
+            <ThemeProvider>{children}</ThemeProvider>
+          </AuthGate>
+        </QueryProvider>
       </body>
     </html>
   );
