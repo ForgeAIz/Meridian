@@ -1,17 +1,12 @@
 // ─── Login Page ─────────────────────────────────────────────────────────────
-// Handles email/password sign-in and OAuth provider buttons.
+// Handles email/password sign-in and signup.
 // useSearchParams must be wrapped in a Suspense boundary per Next.js 15+.
 
 "use client";
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  signInWithEmail,
-  signUpWithEmail,
-  signInWithGoogle,
-  signInWithApple,
-} from "@/lib/supabase/queries";
+import { signInWithEmail, signUpWithEmail } from "@/lib/supabase/queries";
 import { LogoLockup } from "@/components/shared/Logo";
 
 type AuthMode = "signin" | "signup";
@@ -20,20 +15,15 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("return_to") ?? "/dashboard";
-  const errorParam = searchParams.get("error");
 
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(
-    errorParam === "auth_failed"
-      ? "Authentication failed. Please try again."
-      : null
-  );
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  async function handleEmailSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
@@ -51,42 +41,12 @@ function LoginForm() {
       }
     } catch (err: unknown) {
       setError(
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleGoogleSignIn() {
-    setError(null);
-    try {
-      const { error: googleError } = await signInWithGoogle();
-      if (googleError) {
-        if (googleError.message?.includes("Unsupported provider") || googleError.message?.includes("not enabled")) {
-          setError("Google sign-in is not enabled. Use email/password, or enable Google Auth in your Supabase dashboard under Authentication > Providers.");
-        } else {
-          throw googleError;
-        }
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Google sign-in failed.");
-    }
-  }
-
-  async function handleAppleSignIn() {
-    setError(null);
-    try {
-      const { error: appleError } = await signInWithApple();
-      if (appleError) {
-        if (appleError.message?.includes("Unsupported provider") || appleError.message?.includes("not enabled")) {
-          setError("Apple sign-in is not enabled. Use email/password, or enable Apple Auth in your Supabase dashboard under Authentication > Providers.");
-        } else {
-          throw appleError;
-        }
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Apple sign-in failed.");
     }
   }
 
@@ -94,95 +54,101 @@ function LoginForm() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-paper px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="mb-10 flex justify-center">
+        <div className="mb-6 flex justify-center">
           <LogoLockup size="md" color="brass" />
         </div>
 
-        {/* Tagline */}
-        <p className="-mt-6 mb-8 text-center text-xs text-slate">
+        <p className="mb-8 text-center text-xs text-slate">
           Track your line. Own your trajectory.
         </p>
 
-        {/* Error message */}
+        {/* Error */}
         {error && (
           <div className="mb-4 rounded border border-clay/30 bg-clay/10 px-4 py-3 text-sm text-clay">
             {error}
           </div>
         )}
 
-        {/* Success message */}
+        {/* Success */}
         {successMessage && (
           <div className="mb-4 rounded border border-signal-sage/30 bg-signal-sage/10 px-4 py-3 text-sm text-signal-sage">
             {successMessage}
           </div>
         )}
 
-        {/* OAuth Buttons */}
-        <div className="space-y-3">
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded border border-slate/30 bg-white px-4 py-2.5 text-sm text-ink transition-colors hover:bg-paper disabled:opacity-50"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-            </svg>
-            Continue with Google
-          </button>
-
-          <button
-            onClick={handleAppleSignIn}
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded border border-slate/30 bg-black px-4 py-2.5 text-sm text-white transition-colors hover:bg-ink disabled:opacity-50"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-            </svg>
-            Continue with Apple
-          </button>
-        </div>
-
-        {/* Divider */}
-        <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-slate/20" />
-          <span className="text-xs text-slate">or</span>
-          <div className="h-px flex-1 bg-slate/20" />
-        </div>
-
         {/* Email Form */}
-        <form onSubmit={handleEmailSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm text-ink">Email</label>
-            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              required placeholder="you@example.com"
-              className="mt-1 w-full rounded border border-slate/30 bg-white px-3 py-2 text-sm text-ink placeholder:text-slate/50 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass" />
+            <label htmlFor="email" className="block text-sm text-ink">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="you@example.com"
+              className="mt-1 w-full rounded border border-slate/30 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-slate/50 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass"
+            />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm text-ink">Password</label>
-            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              required minLength={6} placeholder="••••••••"
-              className="mt-1 w-full rounded border border-slate/30 bg-white px-3 py-2 text-sm text-ink placeholder:text-slate/50 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass" />
+            <label htmlFor="password" className="block text-sm text-ink">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+              className="mt-1 w-full rounded border border-slate/30 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-slate/50 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass"
+            />
           </div>
-          <button type="submit" disabled={loading}
-            className="w-full rounded bg-[#8B6B2E] px-4 py-2.5 text-sm text-white transition-colors hover:bg-[#7A5D28] disabled:opacity-50">
-            {loading ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded bg-[#8B6B2E] px-4 py-2.5 text-sm text-white transition-colors hover:bg-[#7A5D28] disabled:opacity-50"
+          >
+            {loading
+              ? "Please wait\u2026"
+              : mode === "signin"
+                ? "Sign in"
+                : "Create account"}
           </button>
         </form>
 
         {/* Toggle mode */}
         <p className="mt-6 text-center text-sm text-slate">
           {mode === "signin" ? (
-            <>No account?{" "}
-              <button onClick={() => { setMode("signup"); setError(null); setSuccessMessage(null); }}
-                className="font-medium text-brass hover:underline">Create one</button>
+            <>
+              No account?{" "}
+              <button
+                onClick={() => {
+                  setMode("signup");
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+                className="font-medium text-brass hover:underline"
+              >
+                Create one
+              </button>
             </>
           ) : (
-            <>Already have an account?{" "}
-              <button onClick={() => { setMode("signin"); setError(null); setSuccessMessage(null); }}
-                className="font-medium text-brass hover:underline">Sign in</button>
+            <>
+              Already have an account?{" "}
+              <button
+                onClick={() => {
+                  setMode("signin");
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+                className="font-medium text-brass hover:underline"
+              >
+                Sign in
+              </button>
             </>
           )}
         </p>
@@ -193,11 +159,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-paper">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate/30 border-t-brass" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-paper">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate/30 border-t-brass" />
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );
