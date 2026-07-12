@@ -35,25 +35,37 @@ export async function fetchMarketPrice(ticker: string): Promise<PriceResult> {
     };
   }
 
-  // Get the edge function URL from environment or use default
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+  // Construct the edge function URL from the Supabase URL
+  // Handle both formats: with and without /rest/v1/ suffix
+  let supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "");
   const functionUrl = `${supabaseUrl}/functions/v1/get-market-price`;
 
   callTimestamps.set(cleanTicker, now);
 
   try {
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+
     const response = await fetch(functionUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+        "Authorization": `Bearer ${anonKey}`,
       },
       body: JSON.stringify({ ticker: cleanTicker }),
     });
 
+    if (!response.ok) {
+      console.error("Market price fetch failed:", response.status, response.statusText);
+      return {
+        success: false,
+        error: `Server error (${response.status}) — enter manually`,
+      };
+    }
+
     const data: PriceResult = await response.json();
     return data;
   } catch (err) {
+    console.error("Market price fetch error:", err);
     return {
       success: false,
       error: "Market data temporarily unavailable — enter manually",
