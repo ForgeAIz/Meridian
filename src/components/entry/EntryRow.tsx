@@ -155,19 +155,21 @@ export default function EntryRow({
 
       {/* Ticker + Fetch Price — only on draft, only for assets */}
       {isDraft && showTicker && (
-        <div className="flex items-center gap-1.5">
-          <label className="text-xs text-slate sm:hidden">Ticker</label>
-          <input
-            type="text"
-            value={ticker ?? ""}
-            onChange={(e) => onUpdate(id, "ticker", e.target.value.toUpperCase())}
-            placeholder="AAPL"
-            className="w-20 rounded border border-slate/20 bg-transparent px-2 py-1.5 text-sm font-mono text-ink placeholder:text-slate/40 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass uppercase"
-          />
+        <div className="flex items-center gap-1.5 rounded border border-dashed border-brass/20 bg-brass/5 px-2 py-1 sm:py-0 sm:border-0 sm:bg-transparent">
+          <div>
+            <label className="block text-[10px] text-brass/60 font-medium">Ticker</label>
+            <input
+              type="text"
+              value={ticker ?? ""}
+              onChange={(e) => onUpdate(id, "ticker", e.target.value.toUpperCase())}
+              placeholder="AAPL"
+              className="w-20 rounded border border-slate/20 bg-transparent px-2 py-1 text-sm font-mono text-ink placeholder:text-slate/40 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass uppercase"
+            />
+          </div>
           <button
             onClick={handleFetchPrice}
             disabled={priceLoading || !ticker?.trim()}
-            className="flex h-7 w-7 items-center justify-center rounded text-slate/40 transition-colors hover:bg-brass/10 hover:text-brass disabled:opacity-30"
+            className="flex h-8 w-8 items-center justify-center self-end rounded text-slate/40 transition-colors hover:bg-brass/20 hover:text-brass disabled:opacity-30"
             aria-label="Get current price"
             title="Get current price"
           >
