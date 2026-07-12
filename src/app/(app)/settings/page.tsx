@@ -5,12 +5,15 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useSettings } from "@/hooks/useSettings";
+import { useDashboardData } from "@/hooks/useDashboardData";
+import { exportToCsv } from "@/lib/csvExport";
 import { SUPPORTED_CURRENCIES } from "@/lib/types";
 import type { Currency } from "@/lib/types";
 
 export default function SettingsPage() {
   const { user, signOut } = useAuth();
   const { settings, baseCurrency, isLoading, updateMutation } = useSettings();
+  const { data: dashboardData } = useDashboardData();
 
   if (isLoading) {
     return (
@@ -101,11 +104,17 @@ export default function SettingsPage() {
           Download your snapshot history as a CSV file.
         </p>
         <button
-          disabled
-          className="mt-3 rounded border border-slate/30 bg-white px-4 py-2 text-sm text-slate/50"
-          title="Coming soon"
+          onClick={() => {
+            if (dashboardData?.snapshots) {
+              exportToCsv(dashboardData.snapshots, baseCurrency);
+            }
+          }}
+          disabled={!dashboardData?.snapshots.length}
+          className="mt-3 rounded border border-slate/30 bg-white px-4 py-2 text-sm text-ink transition-colors hover:bg-slate/5 disabled:text-slate/50 disabled:cursor-not-allowed"
         >
-          Export CSV
+          {dashboardData?.snapshots.length
+            ? `Export CSV (${dashboardData.snapshots.length} snapshots)`
+            : "Export CSV"}
         </button>
       </section>
 

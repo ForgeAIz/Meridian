@@ -12,6 +12,7 @@ import AssetsVsLiabilitiesChart from "@/components/dashboard/AssetsVsLiabilities
 import AllocationPie from "@/components/dashboard/AllocationPie";
 import LeverageRatioCard from "@/components/dashboard/LeverageRatioCard";
 import GoalCard from "@/components/dashboard/GoalCard";
+import GapDetection from "@/components/dashboard/GapDetection";
 
 export default function DashboardPage() {
   const { data, isLoading, error } = useDashboardData();
@@ -40,7 +41,8 @@ export default function DashboardPage() {
     );
   }
 
-    const {
+  const {
+    snapshots,
     netWorthSeries: nwSeries,
     leverageSeries,
     leverageTrend,
@@ -106,6 +108,9 @@ export default function DashboardPage() {
         snapshotCount={snapshotCount}
       />
 
+      {/* ─── Re-engagement gap detection ─────────────────────────── */}
+      <GapDetection snapshots={snapshots} />
+
       {/* ─── Dashboard Grid ────────────────────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Net Worth Trend (spans 2 cols on desktop) */}
@@ -114,10 +119,16 @@ export default function DashboardPage() {
           <NetWorthTrendChart data={nwSeries} currency={baseCurrency} />
         </div>
 
-        {/* Goal Card */}
+        {/* Goal Cards — all goals shown as stacked list */}
         {goals.length > 0 ? (
-          <div className="rounded border border-slate/20 p-5 chart-card">
-            {goals.slice(0, 1).map((goal) => (
+          <div className="rounded border border-slate/20 p-5 chart-card space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-ink">Goals</p>
+              {goals.length > 1 && (
+                <span className="text-xs text-slate">{goals.length} goals</span>
+              )}
+            </div>
+            {goals.map((goal) => (
               <GoalCard
                 key={goal.id}
                 goal={goal}
@@ -131,14 +142,12 @@ export default function DashboardPage() {
                 latestSnapshot={latestSnapshot}
               />
             ))}
-            {goals.length > 1 && (
-              <Link
-                href="/goals"
-                className="mt-2 block text-xs text-brass hover:underline"
-              >
-                + {goals.length - 1} more {goals.length - 1 === 1 ? "goal" : "goals"}
-              </Link>
-            )}
+            <Link
+              href="/goals"
+              className="block text-xs text-brass hover:underline pt-1"
+            >
+              Manage goals
+            </Link>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-2 rounded border border-dashed border-slate/30 p-5 text-center">
