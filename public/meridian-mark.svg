@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Meridian arc — a precise open arc like a longitude line on a globe,
+       evoking sextant and compass navigation instruments -->
+  <path d="M 8 4 C 20 4, 28 10, 28 16 C 28 22, 20 28, 8 28"
+        stroke="#A9813C" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Measurement line — a short horizontal line crossing the arc
+       at its midpoint, suggesting a measurement taken on a meridian -->
+  <line x1="8" y1="16" x2="22" y2="16"
+        stroke="#A9813C" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

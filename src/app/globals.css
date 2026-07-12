@@ -1,26 +1,167 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ─── Meridian Design Tokens ─────────────────────────────────────────────────
+   Cartography-instrument palette from the design system.
+   Brass is the signature accent — used sparingly. */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: #14181c;
+  --color-paper: #f6f4ef;
+  --color-slate: #5b6570;
+  --color-brass: #a9813c;
+  --color-deep-teal: #2b4a48;
+  --color-signal-sage: #5e7a63;
+  --color-clay: #b3654a;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --font-display: "Fraunces", serif;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ─── Base styles ───────────────────────────────────────────────────────────*/
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* ─── Dark mode ──────────────────────────────────────────────────────────────*/
+
+.dark body,
+body.dark {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.dark .text-ink { color: var(--color-paper); }
+.dark .bg-paper { background-color: var(--color-ink); }
+
+/* ─── Utility: Thin hairline dividers ────────────────────────────────────────*/
+
+.hairline { border-bottom: 1px solid rgba(91, 101, 112, 0.2); }
+.hairline-vertical { border-right: 1px solid rgba(91, 101, 112, 0.2); }
+
+/* ─── Animations ─────────────────────────────────────────────────────────────*/
+
+/* The Line signature draw-in */
+@keyframes line-draw {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+.animate-line-draw {
+  stroke-dasharray: 1000;
+  animation: line-draw 600ms ease-out forwards;
+}
+
+/* Fade in + slide up for entry rows and cards */
+@keyframes fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.animate-fade-slide-up {
+  animation: fade-slide-up 300ms ease-out both;
+}
+
+/* Staggered delay helpers */
+.delay-0 { animation-delay: 0ms; }
+.delay-1 { animation-delay: 60ms; }
+.delay-2 { animation-delay: 120ms; }
+.delay-3 { animation-delay: 180ms; }
+.delay-4 { animation-delay: 240ms; }
+.delay-5 { animation-delay: 300ms; }
+
+/* Collapse animation for removed rows */
+@keyframes collapse-out {
+  from {
+    opacity: 1;
+    max-height: 80px;
+    transform: scaleY(1);
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: scaleY(0);
+  }
+}
+
+.animate-collapse-out {
+  animation: collapse-out 250ms ease-in forwards;
+  overflow: hidden;
+}
+
+/* Count-up number reveal */
+@keyframes count-reveal {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-count-reveal {
+  animation: count-reveal 200ms ease-out both;
+}
+
+/* Sparkle/pulse for the net worth dot on charts */
+@keyframes pulse-dot {
+  0%, 100% { r: 3; opacity: 1; }
+  50% { r: 5; opacity: 0.6; }
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────────────*/
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-line-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .animate-fade-slide-up,
+  .animate-collapse-out,
+  .animate-count-reveal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    max-height: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Touch target helper ────────────────────────────────────────────────────*/
+
+.touch-target {
+  position: relative;
+}
+
+.touch-target::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  bottom: -10px;
+  left: -10px;
+}
+
+/* ─── Chart hover brightening ────────────────────────────────────────────────*/
+
+.chart-card {
+  transition: box-shadow 200ms ease;
+}
+
+.chart-card:hover {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
 }
