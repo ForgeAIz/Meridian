@@ -6,9 +6,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useSettings } from "@/hooks/useSettings";
 import { useSnapshot } from "@/hooks/useSnapshot";
 import { recalculateDraftTotals } from "@/lib/engines/conversionEngine";
-import { fetchAndCacheFxRates, normalizeRates } from "@/lib/fxRates";
+import { fetchAndCacheFxRates } from "@/lib/fxRates";
 import AssetSection from "./AssetSection";
 import LiabilitySection from "./LiabilitySection";
 import LiveTotalsBar from "./LiveTotalsBar";
@@ -40,13 +41,23 @@ function createEmptyLiability(): LiabilityEntry {
   };
 }
 
-const FALLBACK_RATES = {
-  USD: 1.27,
-  GBP: 1.0,
-  EUR: 1.16,
-  AUD: 1.95,
-  CAD: 1.72,
+const USD_RATES = {
+  USD: 1.0,
+  GBP: 0.79,
+  EUR: 0.92,
+  AUD: 1.52,
+  CAD: 1.36,
 };
+
+/** Normalize USD-based rates so baseCurrency = 1.0 */
+function normalizeUserRates(usdRates: Record<string, number>, base: string): Record<string, number> {
+  const baseToUsd = usdRates[base] ?? 1;
+  const normalized: Record<string, number> = {};
+  for (const [currency, rate] of Object.entries(usdRates)) {
+    normalized[currency] = rate / baseToUsd;
+  }
+  return normalized;
+}
 
 interface EntryFormProps {
   month?: string;
@@ -56,6 +67,7 @@ export default function EntryForm({ month }: EntryFormProps) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const userId = user?.id ?? "";
+  const { baseCurrency: userCurrency } = useSettings();
 
   const {
     snapshot: initialSnapshot,
@@ -64,7 +76,7 @@ export default function EntryForm({ month }: EntryFormProps) {
     saveMutation,
     lockMutation,
     targetMonth,
-  } = useSnapshot({ userId, baseCurrency: "GBP", month });
+  } = useSnapshot({ userId, baseCurrency: userCurrency, month });
 
   // Initialize local state from the query result — no effect needed
   const [localSnapshot, setLocalSnapshot] = useState<Snapshot | null>(null);
@@ -100,10 +112,12 @@ export default function EntryForm({ month }: EntryFormProps) {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasChanges]);
+// ─── Recalculate totals after any edit ─────────────────────────────
 
-  const recalculate = useCallback((snap: Snapshot): Snapshot => {
-    return recalculateDraftTotals(snap, FALLBACK_RATES, snap.baseCurrency);
-  }, []);
+const recalculate = useCallback((snap: Snapshot): Snapshot => {
+  const rates = normalizeUserRates(USD_RATES, snap.baseCurrency) as import("@/lib/types").FxRates;
+  return recalculateDraftTotals(snap, rates, snap.baseCurrency);
+}, []);
 
   // ─── Update field on a row ─────────────────────────────────────────
 
@@ -229,11 +243,11 @@ export default function EntryForm({ month }: EntryFormProps) {
 
       // Fetch and freeze FX rates
       const rawRates = await fetchAndCacheFxRates();
-      const normalized = normalizeRates(rawRates, localSnapshot.baseCurrency);
+      const normalized = normalizeUserRates(rawRates, localSnapshot.baseCurrency) as import("@/lib/types").FxRates;
 
       await lockMutation.mutateAsync({
         snapshot: localSnapshot,
-        fxRates: normalized,
+        fxRates: normalized as import("@/lib/types").FxRates,
       });
 
       // Redirect to dashboard
@@ -299,7 +313,7 @@ export default function EntryForm({ month }: EntryFormProps) {
     );
   }
 
-  const { assets, liabilities, totalAssets, totalLiabilities, netWorth, baseCurrency } =
+  const { assets, liabilities, totalAssets, totalLiabilities, netWorth, baseCurrency: snapshotCurrency } =
     localSnapshot;
 
   return (
@@ -372,7 +386,7 @@ export default function EntryForm({ month }: EntryFormProps) {
         totalAssets={totalAssets}
         totalLiabilities={totalLiabilities}
         netWorth={netWorth}
-        baseCurrency={baseCurrency}
+        baseCurrency={snapshotCurrency}
       />
     </div>
   );

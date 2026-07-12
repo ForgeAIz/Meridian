@@ -62,7 +62,13 @@ function LoginForm() {
     setError(null);
     try {
       const { error: googleError } = await signInWithGoogle();
-      if (googleError) throw googleError;
+      if (googleError) {
+        if (googleError.message?.includes("Unsupported provider") || googleError.message?.includes("not enabled")) {
+          setError("Google sign-in is not enabled. Use email/password, or enable Google Auth in your Supabase dashboard under Authentication > Providers.");
+        } else {
+          throw googleError;
+        }
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
     }
@@ -72,7 +78,13 @@ function LoginForm() {
     setError(null);
     try {
       const { error: appleError } = await signInWithApple();
-      if (appleError) throw appleError;
+      if (appleError) {
+        if (appleError.message?.includes("Unsupported provider") || appleError.message?.includes("not enabled")) {
+          setError("Apple sign-in is not enabled. Use email/password, or enable Apple Auth in your Supabase dashboard under Authentication > Providers.");
+        } else {
+          throw appleError;
+        }
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Apple sign-in failed.");
     }
