@@ -153,46 +153,41 @@ export default function EntryRow({
         />
       </div>
 
-      {/* Ticker + Fetch Price — only on draft, only for assets */}
+      {/* Ticker + Fetch Price — standalone row, clearly visible */}
       {isDraft && showTicker && (
-        <div className="flex items-center gap-1.5 rounded border border-dashed border-brass/20 bg-brass/5 px-2 py-1 sm:py-0 sm:border-0 sm:bg-transparent">
-          <div>
-            <label className="block text-[10px] text-brass/60 font-medium">Ticker</label>
-            <input
-              type="text"
-              value={ticker ?? ""}
-              onChange={(e) => onUpdate(id, "ticker", e.target.value.toUpperCase())}
-              placeholder="AAPL"
-              className="w-20 rounded border border-slate/20 bg-transparent px-2 py-1 text-sm font-mono text-ink placeholder:text-slate/40 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass uppercase"
-            />
-          </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto border-t border-slate/10 pt-2 mt-1 sm:border-0 sm:pt-0 sm:mt-0">
+          <span className="text-[10px] font-medium text-brass uppercase tracking-wider whitespace-nowrap">
+            Price lookup
+          </span>
+          <input
+            type="text"
+            value={ticker ?? ""}
+            onChange={(e) => onUpdate(id, "ticker", e.target.value.toUpperCase())}
+            placeholder="AAPL"
+            className="w-16 rounded border border-slate/30 bg-paper px-2 py-1 text-xs font-mono text-ink placeholder:text-slate/40 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass uppercase"
+          />
           <button
             onClick={handleFetchPrice}
             disabled={priceLoading || !ticker?.trim()}
-            className="flex h-8 w-8 items-center justify-center self-end rounded text-slate/40 transition-colors hover:bg-brass/20 hover:text-brass disabled:opacity-30"
-            aria-label="Get current price"
-            title="Get current price"
+            className="flex items-center gap-1 rounded bg-brass px-2 py-1 text-[10px] font-medium text-white transition-colors hover:bg-brass/90 disabled:opacity-40"
           >
             {priceLoading ? (
-              <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
             ) : (
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
               </svg>
             )}
+            Get Price
           </button>
-        </div>
-      )}
-
-      {/* Price message toast */}
-      {priceMessage && (
-        <div className={`absolute -top-1 right-12 z-10 rounded-md px-2 py-1 text-[10px] shadow-sm ${
-          priceMessage.isError ? "bg-clay/10 text-clay" : "bg-signal-sage/10 text-signal-sage"
-        }`}>
-          {priceMessage.text}
+          {priceMessage && (
+            <span className={`text-[10px] ${priceMessage.isError ? "text-clay" : "text-signal-sage"}`}>
+              {priceMessage.text}
+            </span>
+          )}
         </div>
       )}
 
