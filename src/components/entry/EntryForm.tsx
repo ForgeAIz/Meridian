@@ -191,6 +191,15 @@ const recalculate = useCallback((snap: Snapshot): Snapshot => {
     }, 250);
   }
 
+  // ─── Update notes ──────────────────────────────────────────────────
+
+  function handleNotesChange(text: string) {
+    if (!localSnapshot) return;
+    const updated = { ...localSnapshot, notes: text };
+    setLocalSnapshot(updated);
+    setHasChanges(true);
+  }
+
   // ─── Add a row ─────────────────────────────────────────────────────
 
   function handleAdd(type: "asset" | "liability") {
@@ -357,6 +366,21 @@ const recalculate = useCallback((snap: Snapshot): Snapshot => {
         onAdd={() => handleAdd("liability")}
         removingIds={removingIds}
       />
+
+      {/* ─── Notes ──────────────────────────────────────────────────── */}
+      <div>
+        <label htmlFor="snapshot-notes" className="text-xs text-slate">
+          Notes
+        </label>
+        <textarea
+          id="snapshot-notes"
+          value={localSnapshot.notes ?? ""}
+          onChange={(e) => handleNotesChange(e.target.value)}
+          placeholder="Tax events, big life changes, market notes…"
+          rows={2}
+          className="mt-1 w-full rounded border border-slate/20 bg-white px-3 py-2 text-sm text-ink placeholder:text-slate/40 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass resize-none"
+        />
+      </div>
 
       {/* ─── Save / Lock Buttons ─────────────────────────────────── */}
       <div className="flex gap-3 pb-4">

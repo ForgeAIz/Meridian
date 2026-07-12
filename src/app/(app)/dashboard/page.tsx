@@ -8,6 +8,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { momChange, categoryTrend, savingsRateProxy } from "@/lib/engines/aggregationEngine";
+import { adjustForInflation } from "@/lib/inflation";
 import NetWorthHeader from "@/components/dashboard/NetWorthHeader";
 import NetWorthTrendChart from "@/components/dashboard/NetWorthTrendChart";
 import CategoryTrendChart from "@/components/dashboard/CategoryTrendChart";
@@ -18,12 +19,14 @@ import GoalCard from "@/components/dashboard/GoalCard";
 import GapDetection from "@/components/dashboard/GapDetection";
 import SavingsRateCard from "@/components/dashboard/SavingsRateCard";
 import TrueEquityCard from "@/components/dashboard/TrueEquityCard";
+import InflationToggle from "@/components/dashboard/InflationToggle";
 
 type DrillDown = { category: string; type: "asset" | "liability" } | null;
 
 export default function DashboardPage() {
   const { data, isLoading, error } = useDashboardData();
   const [drillDown, setDrillDown] = useState<DrillDown>(null);
+  const [realMode, setRealMode] = useState(false);
 
   // ─── Initial load / no auth yet ───────────────────────────────────
   if (isLoading || !data) {
@@ -74,6 +77,27 @@ export default function DashboardPage() {
     ? categoryTrend(snapshots, drillDown.category, drillDown.type)
     : [];
 
+  // Inflation-adjusted chart data
+  const adjustedNwSeries = realMode
+    ? nwSeries.map((p) => ({
+        ...p,
+        netWorth: adjustForInflation(p.netWorth, baseCurrency, p.month),
+      }))
+    : nwSeries;
+
+  const adjustedAvlSeries = realMode
+    ? {
+        assets: assetsVsLiabilities.assets.map((p) => ({
+          ...p,
+          netWorth: adjustForInflation(p.netWorth, baseCurrency, p.month),
+        })),
+        liabilities: assetsVsLiabilities.liabilities.map((p) => ({
+          ...p,
+          netWorth: adjustForInflation(p.netWorth, baseCurrency, p.month),
+        })),
+      }
+    : assetsVsLiabilities;
+
   // ─── Empty state ──────────────────────────────────────────────────
   if (snapshotCount === 0) {
     return (
@@ -117,8 +141,11 @@ export default function DashboardPage() {
             />
           ) : (
             <>
-              <p className="mb-2 text-sm font-medium text-ink">Net Worth Trend</p>
-              <NetWorthTrendChart data={nwSeries} currency={baseCurrency} />
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-ink">Net Worth Trend</p>
+              <InflationToggle enabled={realMode} onToggle={setRealMode} currency={baseCurrency} />
+            </div>
+              <NetWorthTrendChart data={adjustedNwSeries} currency={baseCurrency} />
             </>
           )}
         </div>

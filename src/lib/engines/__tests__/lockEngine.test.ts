@@ -30,6 +30,7 @@ const priorSnapshot: Snapshot = {
   totalLiabilities: 380000,
   netWorth: -325000,
   lockedAt: "2026-02-28T23:59:00Z",
+  notes: "",
 };
 
 // ─── prefillSnapshot ─────────────────────────────────────────────────────────

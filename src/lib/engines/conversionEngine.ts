@@ -99,6 +99,7 @@ export function createEmptySnapshot(
     totalLiabilities: 0,
     netWorth: 0,
     lockedAt: null,
+    notes: "",
   };
 }
 

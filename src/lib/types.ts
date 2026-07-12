@@ -64,6 +64,7 @@ export interface Snapshot {
   totalLiabilities: number; // derived: sum of liability valueInBaseCurrency
   netWorth: number; // derived: totalAssets - totalLiabilities
   lockedAt: string | null; // ISO timestamp, null when DRAFT
+  notes: string;
 }
 
 // ─── Goal ─────────────────────────────────────────────────────────────────────

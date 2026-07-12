@@ -33,6 +33,7 @@ function mapRowToSnapshot(row: Record<string, any>): Snapshot {
     totalLiabilities: Number(row.total_liabilities),
     netWorth: Number(row.net_worth),
     lockedAt: row.locked_at,
+    notes: row.notes ?? "",
   };
 }
 
@@ -279,6 +280,7 @@ export async function upsertSnapshot(snapshot: Snapshot) {
         total_liabilities: snapshot.totalLiabilities,
         net_worth: snapshot.netWorth,
         locked_at: snapshot.lockedAt,
+        notes: snapshot.notes ?? "",
       },
       { onConflict: "user_id, month" }
     )

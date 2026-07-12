@@ -142,6 +142,14 @@ export default function SnapshotDetail({
         </div>
       )}
 
+      {/* Notes */}
+      {snapshot.notes && (
+        <div className="rounded-md bg-slate/5 px-4 py-2.5">
+          <p className="text-xs text-slate">Notes</p>
+          <p className="mt-0.5 text-sm text-ink italic">{snapshot.notes}</p>
+        </div>
+      )}
+
       {/* FX Rates */}
       {snapshot.fxRatesUsed && (
         <div className="rounded-md bg-slate/5 px-4 py-2.5">

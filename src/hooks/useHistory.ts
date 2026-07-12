@@ -26,6 +26,7 @@ function mapRowToSnapshot(row: Record<string, any>): Snapshot {
     totalLiabilities: Number(row.total_liabilities),
     netWorth: Number(row.net_worth),
     lockedAt: row.locked_at,
+    notes: row.notes ?? "",
   };
 }
 

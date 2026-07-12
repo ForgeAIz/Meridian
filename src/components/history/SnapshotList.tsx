@@ -4,12 +4,38 @@
 
 "use client";
 
+import { useMemo } from "react";
 import type { Snapshot } from "@/lib/types";
 
 interface SnapshotListProps {
   snapshots: Snapshot[];
   selectedId?: string;
   onSelect: (snapshot: Snapshot) => void;
+}
+
+/** Build a tiny sparkline SVG path from all net worth values up to this point */
+function sparklinePath(snapshots: Snapshot[], upToId: string): string {
+  const sorted = snapshots
+    .filter((s) => s.status === "locked")
+    .sort((a, b) => a.month.localeCompare(b.month));
+
+  const idx = sorted.findIndex((s) => s.id === upToId);
+  if (idx < 1) return "";
+
+  const slice = sorted.slice(0, idx + 1);
+  const values = slice.map((s) => s.netWorth);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const w = slice.length - 1 || 1;
+
+  return slice
+    .map((s, i) => {
+      const x = (i / w) * 40;
+      const y = 16 - ((s.netWorth - min) / range) * 12;
+      return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
 }
 
 function formatCurrency(value: number): string {
@@ -48,32 +74,46 @@ export default function SnapshotList({
 
         return (
           <button
-            key={snapshot.id}
-            onClick={() => onSelect(snapshot)}
-            className={`w-full flex items-center justify-between rounded-md border px-4 py-3 text-left transition-all ${
-              isSelected
-                ? "border-brass/40 bg-brass/5"
-                : "border-slate/15 bg-white hover:border-slate/30 hover:-translate-y-0.5 hover:shadow-sm"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              {/* Status indicator */}
-              <div
-                className={`h-2 w-2 rounded-full ${
-                  isLocked ? "bg-brass" : "bg-slate/30"
-                }`}
-              />
-              <div>
-                <p className="text-sm font-medium text-ink">{monthLabel}</p>
-                <p className="text-xs text-slate">
-                  {isLocked
-                    ? `Locked ${snapshot.lockedAt ? new Date(snapshot.lockedAt).toLocaleDateString() : ""}`
-                    : "Draft — in progress"}
-                </p>
-              </div>
+          key={snapshot.id}
+          onClick={() => onSelect(snapshot)}
+          className={`w-full flex items-center justify-between rounded-md border px-4 py-3 text-left transition-all ${
+            isSelected
+              ? "border-brass/40 bg-brass/5"
+              : "border-slate/15 bg-white hover:border-slate/30 hover:-translate-y-0.5 hover:shadow-sm"
+          }`}
+        >
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            {/* Status indicator */}
+            <div
+              className={`h-2 w-2 shrink-0 rounded-full ${
+                isLocked ? "bg-brass" : "bg-slate/30"
+              }`}
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-ink truncate">{monthLabel}</p>
+              <p className="text-xs text-slate">
+                {isLocked
+                  ? `Locked ${snapshot.lockedAt ? new Date(snapshot.lockedAt).toLocaleDateString() : ""}`
+                  : "Draft"}
+              </p>
             </div>
+          </div>
 
-            <div className="text-right">
+          {/* Sparkline */}
+          <div className="shrink-0 mx-2">
+            <svg width="40" height="16" viewBox="0 0 40 16" className="opacity-40">
+              <path
+                d={sparklinePath(snapshots, snapshot.id)}
+                fill="none"
+                stroke={snapshot.netWorth >= 0 ? "#A9813C" : "#B3654A"}
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+
+          <div className="text-right shrink-0">
               <p
                 className={`text-sm font-mono font-medium ${
                   snapshot.netWorth >= 0 ? "text-ink" : "text-clay"

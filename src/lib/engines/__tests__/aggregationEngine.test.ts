@@ -32,6 +32,7 @@ const jan2026: Snapshot = {
   totalLiabilities: 380000,
   netWorth: 125000,
   lockedAt: "2026-01-31T23:59:00Z",
+  notes: "",
 };
 
 const feb2026: Snapshot = {
@@ -53,6 +54,7 @@ const feb2026: Snapshot = {
   totalLiabilities: 378500,
   netWorth: 128800,
   lockedAt: "2026-02-28T23:59:00Z",
+  notes: "",
 };
 
 const mar2026: Snapshot = {
@@ -74,6 +76,7 @@ const mar2026: Snapshot = {
   totalLiabilities: 377000,
   netWorth: 130500,
   lockedAt: "2026-03-31T23:59:00Z",
+  notes: "",
 };
 
 const allSnapshots = [jan2026, feb2026, mar2026];
