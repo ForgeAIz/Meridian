@@ -179,3 +179,132 @@ export function leverageTrendLabel(points: LeveragePoint[]): TrendLabel {
 
   return change < 0 ? { direction: "Improving" } : { direction: "Rising" };
 }
+
+/**
+ * Computes the value of a single category across all locked snapshots.
+ * Used for category drill-down: click a pie slice → see that category's trend.
+ *
+ * @param snapshots - All locked snapshots for a user
+ * @param category - The category to isolate (e.g. "Investments", "Mortgage")
+ * @param type - "asset" or "liability"
+ * @returns Array of { month, value } points, sorted by month
+ */
+export function categoryTrend(
+  snapshots: Snapshot[],
+  category: string,
+  type: "asset" | "liability"
+): NetWorthPoint[] {
+  const sorted = [...snapshots]
+    .filter((s) => s.status === "locked")
+    .sort((a, b) => a.month.localeCompare(b.month));
+
+  return sorted.map((s) => {
+    const entries = type === "asset" ? s.assets : s.liabilities;
+    const total = entries
+      .filter((e) => e.category === category)
+      .reduce((sum, e) => sum + e.valueInBaseCurrency, 0);
+    return { month: s.month, netWorth: total };
+  });
+}
+
+/**
+ * Computes a trailing N-month average of MoM change as a savings rate proxy.
+ * Since Meridian doesn't see income/spending, this approximates savings rate
+ * from net worth changes with market movement roughly netted out.
+ *
+ * @param momChanges - Array of MomChangeResult values (one per month, excluding first)
+ * @param windowMonths - Trailing window size (default 3)
+ * @returns The average monthly change, or null if insufficient data
+ */
+export function savingsRateProxy(
+  momChanges: (MomChangeResult | null)[],
+  windowMonths: number = 3
+): { avgDelta: number | null; avgPercent: number | null } {
+  const valid = momChanges.filter((m): m is MomChangeResult => m !== null);
+  if (valid.length < 2) return { avgDelta: null, avgPercent: null };
+
+  const trailing = valid.slice(-windowMonths);
+  const avgDelta = trailing.reduce((sum, m) => sum + m.delta, 0) / trailing.length;
+  const validPct = trailing.filter((m) => m.percent !== null);
+  const avgPercent =
+    validPct.length > 0
+      ? validPct.reduce((sum, m) => sum + (m.percent ?? 0), 0) / validPct.length
+      : null;
+
+  return { avgDelta, avgPercent };
+}
+
+/**
+ * Computes an annual summary: total snapshots, start/end net worth,
+ * total change, average monthly change, best and worst months.
+ *
+ * @param snapshots - All locked snapshots for a user
+ * @param year - The year to summarize (e.g. "2026")
+ * @returns Annual summary or null if insufficient data
+ */
+export function annualReview(
+  snapshots: Snapshot[],
+  year: string
+): {
+  year: string;
+  snapshotCount: number;
+  startNetWorth: number | null;
+  endNetWorth: number | null;
+  totalChange: number | null;
+  totalChangePercent: number | null;
+  avgMonthlyChange: number | null;
+  bestMonth: { month: string; delta: number } | null;
+  worstMonth: { month: string; delta: number } | null;
+  monthsActive: number;
+} | null {
+  const yearSnapshots = [...snapshots]
+    .filter((s) => s.status === "locked" && s.month.startsWith(year))
+    .sort((a, b) => a.month.localeCompare(b.month));
+
+  if (yearSnapshots.length === 0) return null;
+
+  const first = yearSnapshots[0];
+  const last = yearSnapshots[yearSnapshots.length - 1];
+  const totalChange = last.netWorth - first.netWorth;
+  const totalChangePercent =
+    first.netWorth !== 0
+      ? (totalChange / Math.abs(first.netWorth)) * 100
+      : null;
+
+  // Compute MoM changes within the year
+  const deltas: { month: string; delta: number }[] = [];
+  for (let i = 1; i < yearSnapshots.length; i++) {
+    deltas.push({
+      month: yearSnapshots[i].month,
+      delta: yearSnapshots[i].netWorth - yearSnapshots[i - 1].netWorth,
+    });
+  }
+
+  const avgMonthlyChange =
+    deltas.length > 0
+      ? deltas.reduce((sum, d) => sum + d.delta, 0) / deltas.length
+      : null;
+
+  const bestMonth =
+    deltas.length > 0
+      ? deltas.reduce((best, d) => (d.delta > best.delta ? d : best))
+      : null;
+
+  const worstMonth =
+    deltas.length > 0
+      ? deltas.reduce((worst, d) => (d.delta < worst.delta ? d : worst))
+      : null;
+
+  return {
+    year,
+    snapshotCount: yearSnapshots.length,
+    startNetWorth: first.netWorth,
+    endNetWorth: last.netWorth,
+    totalChange,
+    totalChangePercent,
+    avgMonthlyChange,
+    bestMonth,
+    worstMonth,
+    monthsActive: yearSnapshots.length,
+  };
+}

@@ -18,6 +18,7 @@ interface AllocationPieProps {
   title: string;
   total: number;
   type: "asset" | "liability";
+  onSliceClick?: (category: string) => void;
 }
 
 function formatCurrency(value: number, currency: string): string {
@@ -48,7 +49,7 @@ function CustomTooltip(props: Record<string, unknown>) {
   );
 }
 
-export default function AllocationPie({ data, title, total, type }: AllocationPieProps) {
+export default function AllocationPie({ data, title, total, type, onSliceClick }: AllocationPieProps) {
   const colors = type === "asset" ? ASSET_COLORS : LIABILITY_COLORS;
 
   return (
@@ -73,6 +74,11 @@ export default function AllocationPie({ data, title, total, type }: AllocationPi
                   dataKey="total"
                   nameKey="category"
                   strokeWidth={0}
+                  onClick={onSliceClick ? (_data: any, _index: number) => {
+                    const name = _data?.name ?? _data?.payload?.category;
+                    if (name) onSliceClick(name);
+                  } : undefined}
+                  style={onSliceClick ? { cursor: "pointer" } : undefined}
                 >
                   {data.map((entry, i) => (
                     <Cell key={entry.category} fill={colors[i % colors.length]} />
