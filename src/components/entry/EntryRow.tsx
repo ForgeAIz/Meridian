@@ -1,12 +1,14 @@
 // ─── EntryRow ────────────────────────────────────────────────────────────────
 // A single editable row for an asset or liability entry.
-// Fields: name, category, currency, value. Responsive: stacks on mobile.
+// Fields: name, category, currency, value, ticker (optional), delete.
+// Supports market price lookup via ticker.
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import type { Currency, AssetCategory, LiabilityCategory } from "@/lib/types";
 import { SUPPORTED_CURRENCIES } from "@/lib/types";
+import { fetchMarketPrice, formatPriceTimestamp } from "@/lib/marketPrice";
 
 interface EntryRowProps {
   id: string;
@@ -17,7 +19,9 @@ interface EntryRowProps {
   valueInBaseCurrency: number;
   type: "asset" | "liability";
   index: number;
+  ticker?: string;
   isRemoving?: boolean;
+  isDraft: boolean;
   onUpdate: (id: string, field: string, value: string | number) => void;
   onDelete: (id: string) => void;
 }
@@ -38,20 +42,59 @@ export default function EntryRow({
   value,
   type,
   index,
+  ticker,
   isRemoving,
+  isDraft,
   onUpdate,
   onDelete,
 }: EntryRowProps) {
   const [mounted, setMounted] = useState(false);
+  const [priceLoading, setPriceLoading] = useState(false);
+  const [priceMessage, setPriceMessage] = useState<{ text: string; isError: boolean } | null>(null);
 
   useEffect(() => {
-    // Small delay for staggered entrance
     const timer = setTimeout(() => setMounted(true), 30);
     return () => clearTimeout(timer);
   }, []);
 
+  // Clear price message after 5 seconds
+  useEffect(() => {
+    if (!priceMessage) return;
+    const timer = setTimeout(() => setPriceMessage(null), 5000);
+    return () => clearTimeout(timer);
+  }, [priceMessage]);
+
   const categories = type === "asset" ? ASSET_CATEGORIES : LIABILITY_CATEGORIES;
   const delayClass = `delay-${Math.min(index, 5)}`;
+
+  async function handleFetchPrice() {
+    if (!ticker?.trim()) return;
+    setPriceLoading(true);
+    setPriceMessage(null);
+
+    const result = await fetchMarketPrice(ticker);
+
+    if (result.success && result.price !== undefined) {
+      onUpdate(id, "value", result.price);
+      if (result.currency) {
+        onUpdate(id, "currency", result.currency);
+      }
+      setPriceMessage({
+        text: `Fetched $${result.price.toFixed(2)} ${result.currency} • ${formatPriceTimestamp(result.timestamp ?? new Date().toISOString())}`,
+        isError: false,
+      });
+    } else {
+      setPriceMessage({
+        text: result.error ?? "Failed to fetch price",
+        isError: true,
+      });
+    }
+
+    setPriceLoading(false);
+  }
+
+  // Create empty asset for ticker field render
+  const showTicker = type === "asset";
 
   return (
     <div
@@ -85,7 +128,7 @@ export default function EntryRow({
         </select>
       </div>
 
-      {/* Currency + Value row on mobile */}
+      {/* Currency + Value row */}
       <div className="flex items-center gap-2 sm:gap-0">
         <label className="text-xs text-slate sm:hidden w-16 shrink-0">Currency</label>
         <select
@@ -110,7 +153,48 @@ export default function EntryRow({
         />
       </div>
 
-      {/* Delete button — always visible on mobile, hover on desktop */}
+      {/* Ticker + Fetch Price — only on draft, only for assets */}
+      {isDraft && showTicker && (
+        <div className="flex items-center gap-1.5">
+          <label className="text-xs text-slate sm:hidden">Ticker</label>
+          <input
+            type="text"
+            value={ticker ?? ""}
+            onChange={(e) => onUpdate(id, "ticker", e.target.value.toUpperCase())}
+            placeholder="AAPL"
+            className="w-20 rounded border border-slate/20 bg-transparent px-2 py-1.5 text-sm font-mono text-ink placeholder:text-slate/40 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass uppercase"
+          />
+          <button
+            onClick={handleFetchPrice}
+            disabled={priceLoading || !ticker?.trim()}
+            className="flex h-7 w-7 items-center justify-center rounded text-slate/40 transition-colors hover:bg-brass/10 hover:text-brass disabled:opacity-30"
+            aria-label="Get current price"
+            title="Get current price"
+          >
+            {priceLoading ? (
+              <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+              </svg>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Price message toast */}
+      {priceMessage && (
+        <div className={`absolute -top-1 right-12 z-10 rounded-md px-2 py-1 text-[10px] shadow-sm ${
+          priceMessage.isError ? "bg-clay/10 text-clay" : "bg-signal-sage/10 text-signal-sage"
+        }`}>
+          {priceMessage.text}
+        </div>
+      )}
+
+      {/* Delete button */}
       <button
         onClick={() => onDelete(id)}
         className="flex h-11 w-11 items-center justify-center self-end rounded-md text-slate/40 transition-colors hover:bg-clay/10 hover:text-clay sm:h-8 sm:w-8 sm:self-center sm:opacity-0 sm:group-hover:opacity-100"

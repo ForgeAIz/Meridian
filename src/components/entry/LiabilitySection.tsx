@@ -12,6 +12,7 @@ interface LiabilitySectionProps {
   onDelete: (id: string) => void;
   onAdd: () => void;
   removingIds: Set<string>;
+  isDraft: boolean;
 }
 
 export default function LiabilitySection({
@@ -20,6 +21,7 @@ export default function LiabilitySection({
   onDelete,
   onAdd,
   removingIds,
+  isDraft,
 }: LiabilitySectionProps) {
   return (
     <div className="space-y-3">
@@ -49,7 +51,9 @@ export default function LiabilitySection({
               valueInBaseCurrency={liability.valueInBaseCurrency}
               type="liability"
               index={i}
+              ticker={liability.ticker}
               isRemoving={removingIds.has(liability.id)}
+              isDraft={isDraft}
               onUpdate={onUpdate}
               onDelete={onDelete}
             />

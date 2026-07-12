@@ -8,8 +8,10 @@ import Link from "next/link";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { annualReview, categoryAllocation } from "@/lib/engines/aggregationEngine";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /** Compute how much each asset category contributed to growth */
-function assetContribution(snapshots: any[], year: string, currency: string) {
+function assetContribution(snapshots: any[], year: string) {
   const yearSnaps = snapshots
     .filter((s) => s.status === "locked" && s.month.startsWith(year))
     .sort((a, b) => a.month.localeCompare(b.month));
@@ -156,12 +158,12 @@ export default function ReviewPage() {
 
           {/* Asset class contribution */}
           {(() => {
-            const assetData = assetContribution(data.snapshots, selectedYear, currency);
+            const assetData = assetContribution(data.snapshots, selectedYear);
             if (!assetData) return null;
             return (
               <div className="rounded border border-slate/20 p-5 space-y-3">
                 <p className="text-sm font-medium text-ink">What drove your growth</p>
-                {assetData.contributions.map((c: any) => (
+                {assetData.contributions.map((c: { category: string; change: number; share: number }) => (
                   <div key={c.category} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate">{c.category}</span>

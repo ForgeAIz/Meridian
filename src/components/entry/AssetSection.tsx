@@ -12,6 +12,7 @@ interface AssetSectionProps {
   onDelete: (id: string) => void;
   onAdd: () => void;
   removingIds: Set<string>;
+  isDraft: boolean;
 }
 
 export default function AssetSection({
@@ -20,6 +21,7 @@ export default function AssetSection({
   onDelete,
   onAdd,
   removingIds,
+  isDraft,
 }: AssetSectionProps) {
   return (
     <div className="space-y-3">
@@ -49,7 +51,9 @@ export default function AssetSection({
               valueInBaseCurrency={asset.valueInBaseCurrency}
               type="asset"
               index={i}
+              ticker={asset.ticker}
               isRemoving={removingIds.has(asset.id)}
+              isDraft={isDraft}
               onUpdate={onUpdate}
               onDelete={onDelete}
             />

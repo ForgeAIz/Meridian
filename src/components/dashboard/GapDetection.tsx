@@ -56,17 +56,19 @@ function advanceMonth(m: string): [number, number] {
 
 export default function GapDetection({ snapshots }: GapDetectionProps) {
   const router = useRouter();
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(
+    typeof window !== "undefined" && sessionStorage.getItem("meridian-gap-dismissed") ? true : false
+  );
 
   const gapMonths = getGapMonths(snapshots);
   const hasGap = gapMonths.length > 0;
 
-  // Check sessionStorage so the prompt only shows once per session
+  // Log gap state but don't setState in effect
   useEffect(() => {
-    if (hasGap && sessionStorage.getItem("meridian-gap-dismissed")) {
-      setDismissed(true);
+    if (hasGap && dismissed) {
+      // Session already dismissed — no action needed
     }
-  }, [hasGap]);
+  }, [hasGap, dismissed]);
 
   if (!hasGap || dismissed) return null;
 

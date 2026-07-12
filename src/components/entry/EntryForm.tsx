@@ -13,6 +13,7 @@ import { fetchAndCacheFxRates } from "@/lib/fxRates";
 import AssetSection from "./AssetSection";
 import LiabilitySection from "./LiabilitySection";
 import LiveTotalsBar from "./LiveTotalsBar";
+import RefreshAllPricesButton from "./RefreshAllPricesButton";
 import type { Snapshot, AssetEntry, LiabilityEntry, Currency } from "@/lib/types";
 
 function generateId(): string {
@@ -148,6 +149,8 @@ const recalculate = useCallback((snap: Snapshot): Snapshot => {
       entry.currency = value as Currency;
     } else if (field === "value") {
       entry.value = Math.max(0, value as number);
+    } else if (field === "ticker") {
+      entry.ticker = value as string;
     }
 
     entries[index] = entry as unknown as AssetEntry & LiabilityEntry;
@@ -353,6 +356,7 @@ const recalculate = useCallback((snap: Snapshot): Snapshot => {
         onDelete={(id) => handleDelete("asset", id)}
         onAdd={() => handleAdd("asset")}
         removingIds={removingIds}
+        isDraft={localSnapshot.status === "draft"}
       />
 
       {/* ─── Divider ─────────────────────────────────────────────── */}
@@ -365,6 +369,7 @@ const recalculate = useCallback((snap: Snapshot): Snapshot => {
         onDelete={(id) => handleDelete("liability", id)}
         onAdd={() => handleAdd("liability")}
         removingIds={removingIds}
+        isDraft={localSnapshot.status === "draft"}
       />
 
       {/* ─── Notes ──────────────────────────────────────────────────── */}
@@ -381,6 +386,18 @@ const recalculate = useCallback((snap: Snapshot): Snapshot => {
           className="mt-1 w-full rounded border border-slate/20 bg-white px-3 py-2 text-sm text-ink placeholder:text-slate/40 focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass resize-none"
         />
       </div>
+
+      {/* ─── Refresh All Prices ────────────────────────────────── */}
+      {localSnapshot.status === "draft" && (
+        <RefreshAllPricesButton
+          assets={assets}
+          liabilities={liabilities}
+          onPriceFetched={(type, id, price, currency) => {
+            handleUpdate(type, id, "value", price);
+            if (currency) handleUpdate(type, id, "currency", currency);
+          }}
+        />
+      )}
 
       {/* ─── Save / Lock Buttons ─────────────────────────────────── */}
       <div className="flex gap-3 pb-4">

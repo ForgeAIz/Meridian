@@ -32,7 +32,10 @@ export default function GoalsPage() {
     currency: Currency;
     category: string;
   }) {
-    createMutation.mutate(data as any, {
+    createMutation.mutate({
+      ...data,
+      priority: 0,
+    } as Parameters<typeof createMutation.mutate>[0], {
       onSuccess: () => {
         setShowForm(false);
       },

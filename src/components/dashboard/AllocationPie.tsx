@@ -74,9 +74,9 @@ export default function AllocationPie({ data, title, total, type, onSliceClick }
                   dataKey="total"
                   nameKey="category"
                   strokeWidth={0}
-                  onClick={onSliceClick ? (_data: any, _index: number) => {
-                    const name = _data?.name ?? _data?.payload?.category;
-                    if (name) onSliceClick(name);
+                  onClick={onSliceClick ? (data, _idx) => {
+                    const entry = data as unknown as { name?: string };
+                    if (entry.name) onSliceClick(entry.name);
                   } : undefined}
                   style={onSliceClick ? { cursor: "pointer" } : undefined}
                 >

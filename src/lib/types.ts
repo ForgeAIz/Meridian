@@ -36,6 +36,7 @@ export interface Entry {
   currency: Currency;
   value: number;
   valueInBaseCurrency: number;
+  ticker?: string;
 }
 
 export interface AssetEntry extends Entry {

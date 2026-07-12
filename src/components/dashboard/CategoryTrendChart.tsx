@@ -30,7 +30,7 @@ function formatCurrency(value: number, currency: string): string {
   return (value < 0 ? "-" : "") + symbol + abs.toLocaleString("en-US", { minimumFractionDigits: 0 });
 }
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded border border-slate/20 bg-white px-3 py-2 text-sm shadow-sm dark:bg-[#1a1e23] dark:border-slate/15">
