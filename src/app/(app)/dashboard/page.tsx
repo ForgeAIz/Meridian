@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { momChange, categoryTrend, savingsRateProxy } from "@/lib/engines/aggregationEngine";
 import { adjustForInflation } from "@/lib/inflation";
@@ -20,11 +21,13 @@ import GapDetection from "@/components/dashboard/GapDetection";
 import SavingsRateCard from "@/components/dashboard/SavingsRateCard";
 import TrueEquityCard from "@/components/dashboard/TrueEquityCard";
 import InflationToggle from "@/components/dashboard/InflationToggle";
+import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 
 type DrillDown = { category: string; type: "asset" | "liability" } | null;
 
 export default function DashboardPage() {
   const { data, isLoading, error } = useDashboardData();
+  const { user } = useAuth();
   const [drillDown, setDrillDown] = useState<DrillDown>(null);
   const [realMode, setRealMode] = useState(false);
 
@@ -98,8 +101,19 @@ export default function DashboardPage() {
       }
     : assetsVsLiabilities;
 
-  // ─── Empty state ──────────────────────────────────────────────────
+  // ─── Empty state / Onboarding ──────────────────────────────────────
   if (snapshotCount === 0) {
+    // Check if user has completed onboarding (stored in sessionStorage)
+    const onboardingDone = typeof window !== "undefined" && sessionStorage.getItem("meridian-onboarding-done");
+
+    if (!onboardingDone) {
+      return (
+        <div className="py-8">
+          <OnboardingWizard userId={user?.id ?? ""} onComplete={() => window.location.reload()} />
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-6">
         <NetWorthHeader latestSnapshot={null} momChange={null} snapshotCount={0} />

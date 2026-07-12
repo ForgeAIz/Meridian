@@ -78,6 +78,12 @@ export default function GoalList({
                   {goal.targetDate}
                 </p>
               </div>
+              <div className="flex items-center gap-2">
+                {goal.category && goal.category !== "Custom" && (
+                  <span className="rounded-full bg-brass/10 px-2 py-0.5 text-[10px] font-medium text-brass">
+                    {goal.category}
+                  </span>
+                )}
               <div className="flex gap-1">
                 <button
                   onClick={() => onEdit(goal)}
@@ -100,6 +106,7 @@ export default function GoalList({
                 </button>
               </div>
             </div>
+          </div>
 
             {/* Progress bar */}
             <div className="space-y-1">

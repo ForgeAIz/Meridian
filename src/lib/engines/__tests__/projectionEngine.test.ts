@@ -129,6 +129,8 @@ describe("projectGoal", () => {
     targetNetWorth: 500000,
     targetDate: "2034-11",
     currency: "GBP",
+    category: "Retirement",
+    priority: 1,
     createdAt: "2026-03-01T00:00:00Z",
   };
 

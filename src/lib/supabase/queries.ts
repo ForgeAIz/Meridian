@@ -68,6 +68,8 @@ function mapGoal(row: Record<string, any>): Goal {
     targetNetWorth: Number(row.target_net_worth),
     targetDate: row.target_date,
     currency: row.currency as Currency,
+    category: row.category ?? "Custom",
+    priority: row.priority ?? 0,
     createdAt: row.created_at,
   };
 }
@@ -348,6 +350,8 @@ export async function insertGoal(goal: Omit<Goal, "id" | "createdAt">) {
       target_net_worth: goal.targetNetWorth,
       target_date: goal.targetDate,
       currency: goal.currency,
+      category: goal.category ?? "Custom",
+      priority: goal.priority ?? 0,
     })
     .select("id")
     .single();

@@ -6,7 +6,43 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { annualReview } from "@/lib/engines/aggregationEngine";
+import { annualReview, categoryAllocation } from "@/lib/engines/aggregationEngine";
+
+/** Compute how much each asset category contributed to growth */
+function assetContribution(snapshots: any[], year: string, currency: string) {
+  const yearSnaps = snapshots
+    .filter((s) => s.status === "locked" && s.month.startsWith(year))
+    .sort((a, b) => a.month.localeCompare(b.month));
+
+  if (yearSnaps.length < 2) return null;
+
+  const first = yearSnaps[0];
+  const last = yearSnaps[yearSnaps.length - 1];
+  const totalChange = last.netWorth - first.netWorth;
+  if (totalChange === 0) return null;
+
+  // Compute the change in each asset category
+  const firstAssetAlloc = categoryAllocation(first.assets, first.totalAssets);
+  const lastAssetAlloc = categoryAllocation(last.assets, last.totalAssets);
+
+  const allCats = new Set([
+    ...firstAssetAlloc.map((a) => a.category),
+    ...lastAssetAlloc.map((a) => a.category),
+  ]);
+
+  const contributions = Array.from(allCats)
+    .map((cat) => {
+      const firstVal = firstAssetAlloc.find((a) => a.category === cat)?.total ?? 0;
+      const lastVal = lastAssetAlloc.find((a) => a.category === cat)?.total ?? 0;
+      const change = lastVal - firstVal;
+      const share = totalChange !== 0 ? (change / totalChange) * 100 : 0;
+      return { category: cat, change, share };
+    })
+    .filter((c) => Math.abs(c.share) > 1)
+    .sort((a, b) => Math.abs(b.share) - Math.abs(a.share));
+
+  return { contributions, totalChange };
+}
 
 function formatCurrency(value: number, currency: string): string {
   const symbols: Record<string, string> = { USD: "$", GBP: "\u00a3", EUR: "\u20ac", AUD: "A$", CAD: "C$" };
@@ -117,6 +153,36 @@ export default function ReviewPage() {
               </div>
             )}
           </div>
+
+          {/* Asset class contribution */}
+          {(() => {
+            const assetData = assetContribution(data.snapshots, selectedYear, currency);
+            if (!assetData) return null;
+            return (
+              <div className="rounded border border-slate/20 p-5 space-y-3">
+                <p className="text-sm font-medium text-ink">What drove your growth</p>
+                {assetData.contributions.map((c: any) => (
+                  <div key={c.category} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate">{c.category}</span>
+                      <span className={`font-mono font-medium ${c.change >= 0 ? "text-signal-sage" : "text-clay"}`}>
+                        {c.change >= 0 ? "+" : ""}{formatCurrency(c.change, currency)} ({c.share >= 0 ? "+" : ""}{c.share.toFixed(0)}%)
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-slate/10 overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.min(Math.abs(c.share), 100)}%`,
+                          backgroundColor: c.share >= 0 ? "var(--color-signal-sage)" : "var(--color-clay)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </>
       )}
     </div>

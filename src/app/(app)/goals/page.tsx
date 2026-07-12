@@ -30,8 +30,9 @@ export default function GoalsPage() {
     targetNetWorth: number;
     targetDate: string;
     currency: Currency;
+    category: string;
   }) {
-    createMutation.mutate(data, {
+    createMutation.mutate(data as any, {
       onSuccess: () => {
         setShowForm(false);
       },

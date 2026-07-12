@@ -4,8 +4,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Goal, Currency } from "@/lib/types";
-import { SUPPORTED_CURRENCIES } from "@/lib/types";
+import type { Goal, GoalProjection, Snapshot, Currency, GoalCategory } from "@/lib/types";
+import { SUPPORTED_CURRENCIES, GOAL_CATEGORIES } from "@/lib/types";
 
 interface GoalFormProps {
   initialGoal?: Goal | null;
@@ -15,6 +15,7 @@ interface GoalFormProps {
     targetNetWorth: number;
     targetDate: string;
     currency: Currency;
+    category: string;
   }) => void;
   onCancel: () => void;
   userId: string;
@@ -35,6 +36,9 @@ export default function GoalForm({
   const [targetDate, setTargetDate] = useState(initialGoal?.targetDate ?? "");
   const [currency, setCurrency] = useState<Currency>(
     initialGoal?.currency ?? "GBP"
+  );
+  const [category, setCategory] = useState<GoalCategory>(
+    initialGoal?.category ?? "Custom"
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -72,6 +76,7 @@ export default function GoalForm({
       targetNetWorth,
       targetDate,
       currency,
+      category,
     });
   }
 
@@ -150,6 +155,23 @@ export default function GoalForm({
           min={getCurrentMonth()}
           className="mt-1 w-full rounded border border-slate/30 bg-paper px-3 py-2 text-sm text-ink focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass"
         />
+      </div>
+
+      {/* Category */}
+      <div>
+        <label htmlFor="goal-category" className="block text-xs text-slate">
+          Category
+        </label>
+        <select
+          id="goal-category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value as GoalCategory)}
+          className="mt-1 rounded border border-slate/30 bg-paper px-3 py-2 text-sm text-ink focus:border-brass focus:outline-none focus:ring-1 focus:ring-brass"
+        >
+          {GOAL_CATEGORIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
       </div>
 
       {/* Currency */}

@@ -71,13 +71,21 @@ export interface Snapshot {
 
 export type GoalStatus = "ON_TRACK" | "BEHIND_PACE" | "OFF_PACE" | "INSUFFICIENT_DATA" | "ACHIEVED";
 
+export type GoalCategory = "Retirement" | "House" | "Debt" | "Investment" | "Education" | "Travel" | "Emergency" | "Custom";
+
+export const GOAL_CATEGORIES: GoalCategory[] = [
+  "Retirement", "House", "Debt", "Investment", "Education", "Travel", "Emergency", "Custom",
+];
+
 export interface Goal {
   id: string;
   userId: string;
   label: string;
   targetNetWorth: number;
-  targetDate: string; // "2034-11"
+  targetDate: string;
   currency: Currency;
+  category: GoalCategory;
+  priority: number;
   createdAt: string;
 }
 
